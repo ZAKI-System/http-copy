@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>http copy</title>
+    <script>
+        function copy(text, output) {
+            navigator.clipboard.writeText(text)
+            .then(() => {
+                output.appendChild(document.createTextNode("[success]"));
+            })
+            .catch((err) => {
+                if (err.name === "NotAllowedError") {
+                    const button = document.createElement("button");
+                    button.textContent = "コピー";
+                    button.addEventListener("click", () => {
+                        copy(text, output);
+                    });
+                    output.appendChild(button);
+                } else {
+                    output.appendChild(document.createTextNode("[err:"+err+"]"));
+                }
+            });
+        }
+        document.addEventListener("DOMContentLoaded", () => {
+            const statusArea = document.getElementById("status");
+            document.getElementById("close").addEventListener("click", () => {
+                if (window.opener != null) window.close();
+                else alert("手動で開いたウィンドウはこのボタンでは閉じません");
+            });
+            if (window.opener != null) {
+                window.opener.postMessage("load", "*");
+            } else {
+                statusArea.appendChild(document.createTextNode("openerがありません"));
+            }
+            window.addEventListener("message", (ev) => {
+                statusArea.appendChild(document.createTextNode("参照元: "+ev.origin));
+                statusArea.appendChild(document.createElement("br"));
+                statusArea.appendChild(document.createTextNode("データ: "+ev.data));
+                statusArea.appendChild(document.createElement("br"));
+                copy(ev.data, statusArea);
+            });
+        });
+    </script>
+</head>
+<body>
+    <p id="status"></p>
+    <button id="close">閉じる</button>
+</body>
+</html>
